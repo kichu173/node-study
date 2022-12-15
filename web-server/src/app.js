@@ -2,6 +2,10 @@ const path = require('path'); // core module
 const express = require('express');
 const hbs = require('hbs');
 
+// import geocode/forecast from utils for weather api
+const geocode = require('./utils/geocode')
+const forecast = require('./utils/forecast')
+
 
 console.log(__dirname);// D:\Nodejs\node-course\web-server\src
 console.log(__filename); // D:\Nodejs\node-course\web-server\src\app.js
@@ -54,7 +58,7 @@ app.get('/help', function(req, res) {
 // })
 
 // app.get('/help', (req, res) => {
-//     res.send({
+//     res.send({ // here you can pass single obj or array of obj as well.
 //         name: 'kichu',
 //         age: 27
 //     })
@@ -63,18 +67,50 @@ app.get('/help', function(req, res) {
 // app.get('/about', (req, res) => {
 //     res.send('<h2>About page</h2>')
 // })
+// nodemon src/app.js -e js,hbs
 
-app.get('/weather', (req, res) => {
-    res.send([
-        {
-            forecast: 'It is cloudy',
-            location: 'chennai'
-        }, 
-        {
-            forecast: 'Dark shady',
-            location: 'philadelphia'
+app.get('/weather', (req, res) => { // http://localhost:3000/weather?address=boston
+    const address = req.query.address;
+    // if code block runs when there is no address query string provided.
+    if(!address) {
+        return res.send({
+            error: 'You must provide an address'
+        })
+    }
+
+    //{ latitude, longitude, location } = {} - using es6 destructure and default parameters
+    geocode(address, function(error, { latitude, longitude, location } = {}) {
+        if (error) {
+            return res.send({
+                error: error
+            })
         }
-    ])
+        forecast(latitude, longitude, function(error, forecastData) {
+            if (error) {
+                return res.send({
+                    error: error
+                })
+            }
+            res.send({
+                forecast: forecastData,
+                location: location,
+                address
+            })
+        })
+    })
+})
+
+app.get('/products', function(req, res) {
+    if (!req.query.search) {
+        return res.send({
+            error: 'You must provide a search term'
+        })
+    }
+    console.log(req.query); // { search: 'games', rating: '3' } | http://localhost:3000/products?search=games&rating=3
+    console.log(req.query.search); // games
+    res.send({
+        products: []
+    })
 })
 
 app.get('/help/*', function (req, res) {

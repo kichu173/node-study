@@ -31,8 +31,9 @@ console.log(rating) // 4.2 (if there is no rating property matching on product o
 
 // Object destructuring with function arguments
 
-const transaction = (type, { label, stock }) => {
+const transaction = (type, { label, stock } = {}) => {
     console.log(type, label, stock)
 }
 
 transaction('order', product)// order Red notebook 201
+transaction('order')// you will end up with js error - cannot destructure property label of undefined. To correct the error - { label, stock } = {} // o/p: order undefined undefined
