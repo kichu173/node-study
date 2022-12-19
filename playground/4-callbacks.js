@@ -35,3 +35,19 @@ const add = (a, b, callback) => {
 add(1, 4, (sum) => {
     console.log(sum) // Should print: 5
 })
+
+// callback example (video.10 - mongodb and promises section)
+const doWorkCallback = function(callback) {
+    setTimeout(function() {
+        //callback(undefined, 'success');
+        callback('Something went wrong');
+    }, 2000)
+}
+
+doWorkCallback(function(err, result) {
+    if (err) {
+        return console.log(err);;
+    }
+
+    console.log(result);
+});
