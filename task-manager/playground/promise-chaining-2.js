@@ -16,7 +16,7 @@ Task.findByIdAndDelete('63a4971b74125cfe0c74767f').then((data) => {
 // Using async - await | Rewriting above code using async await
 
 const deleteTaskAndCount = async (id) => {
-    const task = await Task.findByIdAndDelete(id);// you can also remove assigned variable as we are not using that const elsewhere in code and keep it as plain (ex: await Task.findByIdAndDelete(id);)
+    const task = await Task.findByIdAndDelete(id);// you can also remove assigned local variable as we are not using that const elsewhere in code and keep it as plain (ex: await Task.findByIdAndDelete(id);)
     const count = await Task.countDocuments({ completed: false });
     return count;
 }
