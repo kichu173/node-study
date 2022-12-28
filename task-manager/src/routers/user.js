@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/user');
 const router = new express.Router();
 
+// create a user/ sing up
 router.post('/users', async function (req, res) {
     const user = new User(req.body);
 
@@ -13,6 +14,16 @@ router.post('/users', async function (req, res) {
     }
 
     console.log('user post req', req.body);// prints obj {} ex: { name: 'Kiran', email: 'kiran@example.com', password: 'Re' }
+})
+
+// Logging in user
+router.post('/users/login', async function(req, res) {
+    try {
+        const user = await User.findByCredentials(req.body.email, req.body.password);
+        res.send(user);
+    } catch (e) {
+        res.status(400).send();
+    }
 })
 
 // fetching multiple users (https://mongoosejs.com/docs/queries.html)
@@ -58,7 +69,15 @@ router.patch('/users/:id', async function (req, res) {
         return res.status(400).send({error: 'Property does not exist!'});
     }
     try {
-        const user = await User.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true });// 3rd arg is optional -> going to return the new user as opposed to the existing one that was found before the update.
+        // alternate code for findByIdAndUpdate below to make our middleware running as expected.
+        const user = await User.findById(_id);
+        updates.forEach((update) => {
+            user[update] = req.body[update];
+        })
+
+        await user.save();
+
+        // const user = await User.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true });// 3rd arg is optional -> going to return the new user as opposed to the existing one that was found before the update. Commented out because our middleware 'pre' is not working.
         // if there was no user with id(invalid)
         if (!user) {
             return res.status(404).send();

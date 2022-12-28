@@ -56,7 +56,15 @@ router.patch('/tasks/:id', async function(req, res) {
         return res.status(400).send({error: 'Property does not exist!'});
     }
     try {
-        const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });// 3rd arg is optional -> going to return the new user as opposed to the existing one that was found before the update.
+        // alternate code for findByIdAndUpdate below to make our middleware 'pre' running as expected.
+        const task = await Task.findById(req.params.id);
+        updates.forEach((update) => {
+            task[update] = req.body[update];
+        })
+
+        await task.save();
+
+        // const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });// 3rd arg is optional -> going to return the new user as opposed to the existing one that was found before the update.
         // if there was no task with id(invalid)
         if (!task) {
             return res.status(404).send();

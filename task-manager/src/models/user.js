@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
-// Defining a model
-const User = mongoose.model('User', {
+// mongoose supports middleware and middleware allows ways to customize the behavior of your mongoose model. (https://mongoosejs.com/docs/middleware.html)
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -11,6 +12,7 @@ const User = mongoose.model('User', {
     email: {
         type: String,
         required: true,
+        unique: true,
         trim: true,
         lowercase: true,
         validate(value) {
@@ -41,7 +43,36 @@ const User = mongoose.model('User', {
     }
 })
 
-module.exports = User
+userSchema.statics.findByCredentials = async (email, password) => {
+    const user = await User.findOne({ email: email })
+
+    if (!user) {
+        throw new Error('Unable to login');
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+        throw new Error('Unable to login');
+    }
+    
+    return user;
+}
+
+// run some code before a user is saved. middleware used to Hash the plain text password before saving.
+userSchema.pre('save', async function(next) {
+    const user = this;
+    // will be true when the user is first created and will also be true if the user is being updated and password was one of the things changed.
+    if (user.isModified('password')) {
+        user.password = await bcrypt.hash(user.password, 8);
+    }
+    console.log('just before saving', user);// just before saving { name: 'Jessica', email: 'jessica@example.com', age: 0, password: 'Blue12345!', _id: new ObjectId("63ac737e6b4d8499a60ef261") }
+    next();// mark the function is over.
+})
+
+// Defining a model
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
 
 
 // creating an instance of model
