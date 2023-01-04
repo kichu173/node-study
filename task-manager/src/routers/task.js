@@ -22,10 +22,34 @@ router.post('/tasks', auth, async function (req, res) {
 })
 
 // fetch all tasks
+// GET /tasks?completed=true or false - filtering data
+// GET /tasks?limit=10&skip=20 | Pagination - limit / skip
+// GET /tasks?sortBy=createdAt_asc or createdAt_desc
+// trying with all above options - http://localhost:3000/tasks?sortBy=completed_desc&completed=false&limit=1 (may slow down the app combining all)
 router.get('/tasks', auth, async function(req, res) {
+    const match = {};// if no query match is provided we will return all tasks (try with - http://localhost:3000/tasks)
+    const sort = {}
+
+    if (req.query.completed) {
+        match.completed = req.query.completed === 'true';
+    }
+
+    if (req.query.sortBy) {
+        const parts = req.query.sortBy.split('_');
+        sort[parts[0]] = parts[1] === 'asc' ? 1 : -1;
+    }
+
     try {
-        const tasks = await Task.find({ owner: req.user._id });// another way to return tasks only for the authenticated user is using populate (refer index.js) -> await req.user.populate('tasks') | res.send(req.user.tasks)
-        res.send(tasks);
+        await req.user.populate({
+            path: 'tasks',
+            match: match,
+            options: {
+                limit: +req.query.limit,
+                skip: +req.query.skip,
+                sort
+            }
+         });// another way to return tasks only for the authenticated user is using populate (refer index.js) -> await req.user.populate('tasks') | res.send(req.user.tasks)
+        res.send(req.user.tasks);
     } catch (e) {
         res.status(500).send();
     }

@@ -51,6 +51,8 @@ const userSchema = new mongoose.Schema({
             }
         }
     ]
+}, {
+    timestamps: true
 })
 
 // virtual property which is not stored in db, it is just for mongoose to be able to figure out who owns what and how they're related.
